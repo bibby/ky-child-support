@@ -4,7 +4,9 @@ Don't ask why.
 
 See `main.py` for example usage.
 Basically, toss a number of children in with two data-complete `Parent`s, and
-out pops your conclusion and worksheet.
+out pops your conclusion and [worksheet](https://www.ardfky.org/sites/ardfky.org/files/Child%20Support%20Worksheet%20CS71.pdf).
+
+Current for [2024 guidelines](https://apps.legislature.ky.gov/law/statutes/statute.aspx?id=52811).
 
 This should not take the place of your attorney, and has comes with no guarantee of accuracy or fitness-for-purpose.
 
