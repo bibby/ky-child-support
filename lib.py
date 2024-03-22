@@ -314,7 +314,7 @@ class WorksheetLine:
     def get_b(self):
         if self.is_percent:
             return f"{self.b*100:0.2f}%"
-        return self.a
+        return self.b
 
 
 class TimeAdjustment(Table):
