@@ -31,6 +31,7 @@ if __name__ == '__main__':
         insurance=335
     )
 
+    children = min(children, 6)
     worksheet = Worksheet(children, him, her)
     print("\n")
     worksheet.calc_support()
