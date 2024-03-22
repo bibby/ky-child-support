@@ -6,8 +6,9 @@ if __name__ == '__main__':
     # your mileage may vary
     others_days = 90
     children = 3
+
     if len(sys.argv) > 1:
-        days = float(sys.argv[1])
+        others_days = float(sys.argv[1])
     if len(sys.argv) > 2:
         children = int(sys.argv[2])
 
