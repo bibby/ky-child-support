@@ -263,7 +263,8 @@ class Worksheet:
         self.add_line(
             WorksheetLine(
                 14,
-                b=adjustment
+                b=adjustment,
+                percent=True
             )
         )
 
@@ -307,12 +308,12 @@ class WorksheetLine:
         return str(self.num)
 
     def get_a(self):
-        if self.is_percent:
+        if self.a and self.is_percent:
             return f"{self.a*100:0.2f}%"
         return self.a
 
     def get_b(self):
-        if self.is_percent:
+        if self.b and self.is_percent:
             return f"{self.b*100:0.2f}%"
         return self.b
 
