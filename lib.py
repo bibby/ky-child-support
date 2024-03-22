@@ -179,7 +179,7 @@ class Worksheet:
         A.calc_percent(combined_income)
         B.calc_percent(combined_income)
 
-        self.add_line(WorksheetLine(6, a=A.perc, b=B.perc))
+        self.add_line(WorksheetLine(6, a=A.perc, b=B.perc, percent=True))
 
         ssr = B.check_ssr()
 
@@ -294,16 +294,27 @@ class Worksheet:
 
 
 class WorksheetLine:
-    def __init__(self, num, a=None, b=None, c=None, checks=None):
+    def __init__(self, num, a=None, b=None, c=None, checks=None, percent=False):
         # columns
         self.num = num
         self.a = a
         self.b = b
         self.c = c
         self.checks = checks
+        self.is_percent = percent
 
     def __repr__(self):
         return str(self.num)
+
+    def get_a(self):
+        if self.is_percent:
+            return f"{self.a*100:0.2f}%"
+        return self.a
+
+    def get_b(self):
+        if self.is_percent:
+            return f"{self.b*100:0.2f}%"
+        return self.a
 
 
 class TimeAdjustment(Table):
@@ -328,8 +339,8 @@ class WorksheetPrinter:
             WorksheetPrinter.fmt_line(
                 [
                     line.num,
-                    line.a,
-                    line.b,
+                    line.get_a(),
+                    line.get_b(),
                     line.c
                 ]
             )
