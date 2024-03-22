@@ -138,8 +138,8 @@ class LineItem:
 
 class Worksheet:
     def __init__(self, children, *parents):
-        self.children = children
-        self.parents = parents
+        self.children = min(children, 6)
+        self.parents = parents[:2]
         self.lines = dict()
 
     def add_line(self, line):
