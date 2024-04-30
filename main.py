@@ -27,7 +27,7 @@ if __name__ == '__main__':
         "HisName",
         his_days,
         110 * 1000 / 12,
-        care_expense=60 * 6,
+        care_expense=20 * 3 * 2 * 4,
         insurance=335
     )
 

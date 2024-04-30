@@ -141,6 +141,8 @@ class Worksheet:
         self.children = min(children, 6)
         self.parents = parents[:2]
         self.lines = dict()
+        self.shared_parenting = None
+        self.ssr = None
 
     def add_line(self, line):
         self.lines[line.num] = line
@@ -181,25 +183,25 @@ class Worksheet:
 
         self.add_line(WorksheetLine(6, a=A.perc, b=B.perc, percent=True))
 
-        ssr = B.check_ssr()
+        self.ssr = B.check_ssr()
 
         # 7c
-        if ssr:
-            obligation = ssr.for_children(self.children)
+        if self.ssr:
+            obligation = self.ssr.for_children(self.children)
         else:
             guidelines = ObligationGuidelines()
             item = guidelines.for_value(value=combined_income)
             obligation = item.for_children(self.children)
 
-        shared_parenting = B.days >= MIN_SPA_DAYS
+        self.shared_parenting = B.days >= MIN_SPA_DAYS
 
         self.add_line(
             WorksheetLine(
                 7,
                 c=obligation,
                 checks=dict(
-                    ssr=ssr is not None,
-                    shared_parenting=shared_parenting
+                    ssr=self.ssr is not None,
+                    shared_parenting=self.shared_parenting
                 )
             )
         )
@@ -253,7 +255,7 @@ class Worksheet:
             )
         )
 
-        if not shared_parenting:
+        if not self.shared_parenting:
             return self.finalize(self.get_val("12B"), A, B)
 
         ta = TimeAdjustment()
@@ -309,12 +311,12 @@ class WorksheetLine:
 
     def get_a(self):
         if self.a and self.is_percent:
-            return f"{self.a*100:0.2f}%"
+            return f"{self.a * 100:0.2f}%"
         return self.a
 
     def get_b(self):
         if self.b and self.is_percent:
-            return f"{self.b*100:0.2f}%"
+            return f"{self.b * 100:0.2f}%"
         return self.b
 
 
@@ -332,6 +334,7 @@ class WorksheetPrinter:
         WorksheetPrinter.print_header()
         for line in worksheet.get_lines():
             WorksheetPrinter.print_line(line)
+        WorksheetPrinter.print_checks(worksheet)
         WorksheetPrinter.print_footer()
 
     @staticmethod
@@ -348,21 +351,22 @@ class WorksheetPrinter:
         )
 
     @staticmethod
-    def fmt_line(fields, sep="|"):
-        return sep.join(
-            list(
-                map(
-                    WorksheetPrinter.fixed_width,
-                    fields
-                )
-            )
-        )
+    def fmt_line(fields, sep="|", width=None):
+        if isinstance(width, list):
+            lines = []
+            for i, val in enumerate(fields):
+                wid = width[i]
+                lines.append(WorksheetPrinter.fixed_width(val, wid))
+        else:
+            lines = [WorksheetPrinter.fixed_width(val, width) for val in fields]
+        return sep.join(lines)
 
     @staticmethod
-    def fixed_width(val):
-        s = " " * WorksheetPrinter.COL_WIDTH
+    def fixed_width(val, width=None):
+        width = width or WorksheetPrinter.COL_WIDTH
+        s = " " * width
         s += WorksheetPrinter.fmt_val(val)
-        return s[-WorksheetPrinter.COL_WIDTH:]
+        return s[-width:]
 
     @staticmethod
     def fmt_val(val):
@@ -390,6 +394,25 @@ class WorksheetPrinter:
                 ["=" * WorksheetPrinter.COL_WIDTH] * 4
             )
         )
+
+    @staticmethod
+    def print_checks(worksheet: Worksheet):
+        WorksheetPrinter.out(
+            WorksheetPrinter.fmt_line(
+                ["-" * WorksheetPrinter.COL_WIDTH] * 4
+            )
+        )
+
+        triple = WorksheetPrinter.COL_WIDTH * 3 + 2
+        WorksheetPrinter.out(WorksheetPrinter.fmt_line([
+            "Shared-Parenting Adjusted",
+            str(worksheet.shared_parenting)
+        ], width=[triple, WorksheetPrinter.COL_WIDTH]))
+
+        WorksheetPrinter.out(WorksheetPrinter.fmt_line([
+            "Self-Support Reserve",
+            str(worksheet.ssr)
+        ], width=[triple, WorksheetPrinter.COL_WIDTH]))
 
     @staticmethod
     def print_footer():
