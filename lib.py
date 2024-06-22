@@ -8,8 +8,14 @@ Effective March 31, 2023, KRS 403.2121
 """
 
 
+def to_double(val):
+    if not val:
+        return 0
+    return int(val * 100) / 100
+
+
 class Parent:
-    def __init__(self, name, days, income, care_expense=0, insurance=0, maintenance=0, other_support=0):
+    def __init__(self, name="", days=0, income=0, care_expense=0, insurance=0, maintenance=0, other_support=0):
         self.name = name
         self.days = days
         self.income = income
@@ -26,14 +32,20 @@ class Parent:
         letter = "A" if self.isA else "B"
         return f"{self.name} ({letter})"
 
+    def recalc(self):
+        self.adjusted_income = self.income - self.maintenance - self.other_support
+        self.perc = None
+        self.ssr = False
+        self.isA = False
+
     def calc_percent(self, combined):
-        self.perc = self.adjusted_income / combined
+        self.perc = 0
+        if combined > 0:
+            self.perc = self.adjusted_income / combined
 
     def check_ssr(self):
         table = SSRTable()
-        ssr = table.for_value(self.adjusted_income)
-        if ssr:
-            self.ssr = True
+        self.ssr = table.for_value(self.adjusted_income)
         return self.ssr
 
     def calc_obligation(self, obligation, adjust=False):
@@ -143,6 +155,9 @@ class Worksheet:
         self.lines = dict()
         self.shared_parenting = None
         self.ssr = None
+        self.A = parents[0]
+        self.B = parents[1]
+        self.final = ""
 
     def add_line(self, line):
         self.lines[line.num] = line
@@ -164,12 +179,19 @@ class Worksheet:
 
     def calc_support(self):
         (X, Y) = self.parents
+        X.recalc()
+        Y.recalc()
         if X.days == Y.days:
             (A, B) = sorted([X, Y], key=lambda p: p.income)
         else:
             (A, B) = sorted([X, Y], key=lambda p: p.days, reverse=True)
 
+        self.A = A
+        self.B = B
+
         A.isA = True
+        B.isA = False
+
         self.add_line(WorksheetLine(1, a=A.income, b=B.income))
         self.add_line(WorksheetLine(2, a=A.maintenance, b=B.maintenance))
         self.add_line(WorksheetLine(3, a=A.other_support, b=B.other_support))
@@ -256,7 +278,8 @@ class Worksheet:
         )
 
         if not self.shared_parenting:
-            return self.finalize(self.get_val("12B"), A, B)
+            self.finalize(self.get_val("12B"), A, B)
+            return self
 
         ta = TimeAdjustment()
         adjustment_item = ta.for_value(B.days)
@@ -285,12 +308,13 @@ class Worksheet:
         )
 
         self.finalize(self.get_val("16B"), A, B)
+        return self
 
-    @staticmethod
-    def finalize(support, A, B):
+    def finalize(self, support, A, B):
         (payer, pays) = (B, A) if support > 0 else (A, B)
         support = abs(support)
-        print(f"{payer} pays ${support:.2f} to {pays}")
+        self.final = f"{payer} pays ${support:.2f} to {pays}"
+        print(self.final)
 
     def print(self):
         WorksheetPrinter.print(self)
@@ -300,9 +324,9 @@ class WorksheetLine:
     def __init__(self, num, a=None, b=None, c=None, checks=None, percent=False):
         # columns
         self.num = num
-        self.a = a
-        self.b = b
-        self.c = c
+        self.a = to_double(a)
+        self.b = to_double(b)
+        self.c = to_double(c)
         self.checks = checks
         self.is_percent = percent
 
@@ -423,3 +447,27 @@ class WorksheetPrinter:
             ),
             border="+"
         )
+
+
+class State:
+    def __init__(self):
+        self.children = 3
+        self.parents = [
+            Parent(name="Him"),
+            Parent(name="Her"),
+        ]
+        self.worksheet = None
+
+    def calc(self):
+        self.worksheet = Worksheet(self.children, *self.parents).calc_support()
+
+    def reflect_days(self, parent, value):
+        for p in self.parents:
+            val = 365 - value
+            if p != parent and p.days != val:
+                p.days = val
+
+        return True
+
+    def mk_reflect(self, state, parent, callback):
+        return lambda e: state.reflect_days(parent, e.value) and callback()

@@ -6,6 +6,7 @@ authors = ["bibby <bibby@bbby.org>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+nicegui = "^1.4.27"
 
 [tool.poetry.dev-dependencies]
 
