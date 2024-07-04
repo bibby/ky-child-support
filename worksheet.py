@@ -80,7 +80,7 @@ class Worksheet:
         A.calc_percent(combined_income)
         B.calc_percent(combined_income)
 
-        self.add_line(WorksheetLine(6, a=A.perc, b=B.perc, percent=True))
+        self.add_line(WorksheetLine(6, a=A.perc * 100, b=B.perc * 100, percent=True))
 
         self.ssr = B.check_ssr()
 
@@ -133,8 +133,8 @@ class Worksheet:
         self.add_line(
             WorksheetLine(
                 11,
-                a=self.get_val("10C") * self.get_val("6A"),
-                b=self.get_val("10C") * self.get_val("6B"),
+                a=self.get_val("10C") * self.get_val("6A") / 100,
+                b=self.get_val("10C") * self.get_val("6B") / 100,
             )
         )
 
@@ -160,7 +160,7 @@ class Worksheet:
 
         ta = TimeAdjustment()
         adjustment_item = ta.for_value(B.days)
-        adjustment = adjustment_item.at_index(0) / 100
+        adjustment = adjustment_item.at_index(0)
 
         self.add_line(
             WorksheetLine(
@@ -173,7 +173,7 @@ class Worksheet:
         self.add_line(
             WorksheetLine(
                 15,
-                b=self.get_val("7C") * adjustment
+                b=self.get_val("7C") * adjustment / 100
             )
         )
 
@@ -222,7 +222,6 @@ class WorksheetLine:
         if self.b and self.is_percent:
             return f"{self.b * 100:0.2f}%"
         return self.b
-
 
 
 class Table:

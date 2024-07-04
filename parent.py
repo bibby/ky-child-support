@@ -55,7 +55,6 @@ class Parent:
     def calc_income(self):
         period = incomePeriods[self._income_period or 0]
         self.income = period.to_monthly(self._income_val)
-        print("income", self.income)
 
     @property
     def income_val(self):
@@ -73,7 +72,6 @@ class Parent:
     @income_period.setter
     def income_period(self, period):
         self._income_period = period
-        print("_income_period", period)
         self.calc_income()
 
     def recalc(self):

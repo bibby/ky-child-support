@@ -10,6 +10,7 @@ class State:
             Parent(name="Her"),
         ]
         self.worksheet = None
+        self.help = None
 
     def calc(self):
         self.worksheet = Worksheet(self.children, *self.parents).calc_support()
@@ -24,4 +25,10 @@ class State:
 
     def mk_reflect(self, state, parent, callback):
         return lambda e: state.reflect_days(parent, e.value) and callback()
+
+    def set_help(self, help_content):
+        changed = self.help != help_content
+        if changed:
+            self.help = help_content
+        return changed
 
