@@ -200,14 +200,27 @@ class Worksheet:
     def sim(self):
         if not self.ready:
             return []
-        data = []
+
+        A = []
+        B = []
         for days in range(YEAR_DAYS):
             worksheet = self.copy()
             worksheet.parents[0].days = days
             worksheet.parents[1].days = YEAR_DAYS - days
             worksheet.calc_support()
-            data.append(worksheet.parents[0].payment)
-        return data
+            A.append(worksheet.parents[0].payment)
+            B.append(worksheet.parents[1].payment)
+
+        return [
+            dict(
+                type="line",
+                data=B
+            ),
+            dict(
+                type="line",
+                data=A  # brighter green
+            ),
+        ]
 
 
 class WorksheetLine:

@@ -121,11 +121,11 @@ def gui():
 
     @ui.refreshable
     def draw_chart():
-        ui.echart({
-            'xAxis': {'type': 'category'},
-            'yAxis': {'axisLabel': {':formatter': 'value => "$" + value'}},
-            'series': [{'type': 'line', 'data': state.worksheet.sim()}],
-        })
+        ui.echart(dict(
+            xAxis=dict(type="category"),
+            yAxis=dict(axisLabel={':formatter': 'value => "$" + value'}),
+            series=state.worksheet.sim(),
+        ))
 
     @ui.refreshable
     def draw_lookups():
