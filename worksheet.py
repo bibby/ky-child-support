@@ -2,27 +2,7 @@ import re
 
 from fmt import to_double
 from printer import WorksheetPrinter
-from tables import MIN_SPA_DAYS, SSR_TABLE, GUIDELINES, TIME_ADJUSTMENT
-
-
-class LineItem:
-    def __init__(self, value, *table):
-        self.value = value
-        self.table = table
-
-    def __repr__(self):
-        return str(self.value)
-
-    @staticmethod
-    def parse(line):
-        parts = list(map(float, line.split(" ")))
-        return LineItem(parts[0], *parts[1:])
-
-    def for_children(self, children):
-        return self.at_index(children - 1)
-
-    def at_index(self, index):
-        return self.table[index]
+from tables import MIN_SPA_DAYS, SSR_TABLE, GUIDELINES, TIME_ADJUSTMENT, YEAR_DAYS
 
 
 class Worksheet:
@@ -31,7 +11,13 @@ class Worksheet:
         self.parents = parents[:2]
         self.lines = dict()
         self.shared_parenting = None
+
+        # table lookups
         self.ssr = None
+        self.guideline = None
+        self.time_adjustment = None
+
+        # finals
         self.A = parents[0]
         self.B = parents[1]
         self.final = ""
@@ -82,14 +68,16 @@ class Worksheet:
 
         self.add_line(WorksheetLine(6, a=A.perc * 100, b=B.perc * 100, percent=True))
 
-        self.ssr = B.check_ssr()
+        self.ssr = B.check_ssr(self.children)
 
         # 7c
         if self.ssr:
             obligation = self.ssr.for_children(self.children)
+            self.guideline = None
         else:
             guidelines = ObligationGuidelines()
             item = guidelines.for_value(value=combined_income)
+            self.guideline = item
             obligation = item.for_children(self.children)
 
         self.shared_parenting = B.days >= MIN_SPA_DAYS
@@ -154,12 +142,15 @@ class Worksheet:
             )
         )
 
+        self.time_adjustment = None
+
         if not self.shared_parenting:
             self.finalize(self.get_val("12B"), A, B)
             return self
 
         ta = TimeAdjustment()
         adjustment_item = ta.for_value(B.days)
+        self.time_adjustment = adjustment_item
         adjustment = adjustment_item.at_index(0)
 
         self.add_line(
@@ -188,9 +179,13 @@ class Worksheet:
         return self
 
     def finalize(self, support, A, B):
-        (payer, pays) = (B, A) if support > 0 else (A, B)
+        (payer, payee) = (B, A) if support > 0 else (A, B)
+
         support = abs(support)
-        self.final = f"{payer} pays ${support:.2f} to {pays}"
+        payer.payment = -1 * support
+        payee.payment = support
+
+        self.final = f"{payer} pays ${support:.2f} to {payee}"
 
     def print(self):
         WorksheetPrinter.print(self)
@@ -198,6 +193,21 @@ class Worksheet:
     @property
     def ready(self):
         return sum([p.income_val for p in self.parents]) > 0
+
+    def copy(self):
+        return Worksheet(self.children, *[p.copy() for p in self.parents])
+
+    def sim(self):
+        if not self.ready:
+            return []
+        data = []
+        for days in range(YEAR_DAYS):
+            worksheet = self.copy()
+            worksheet.parents[0].days = days
+            worksheet.parents[1].days = YEAR_DAYS - days
+            worksheet.calc_support()
+            data.append(worksheet.parents[0].payment)
+        return data
 
 
 class WorksheetLine:
@@ -215,20 +225,25 @@ class WorksheetLine:
 
     def get_a(self):
         if self.a and self.is_percent:
-            return f"{self.a * 100:0.2f}%"
+            return f"{self.a:0.2f}%"
         return self.a
 
     def get_b(self):
         if self.b and self.is_percent:
-            return f"{self.b * 100:0.2f}%"
+            return f"{self.b:0.2f}%"
         return self.b
+
+
+class TableMode:
+    FLOOR = 1
+    CEILING = 2
 
 
 class Table:
     def __init__(self):
         self.items = []
         self.sorted = False
-        self.reversed = False
+        self.mode = TableMode.FLOOR
 
     def build(self, data):
         data = data.replace(",", "")
@@ -240,29 +255,63 @@ class Table:
     def add_line(self, line):
         self.add(LineItem.parse(line))
 
-    def add(self, ssr):
-        self.items.append(ssr)
+    def add(self, item):
+        self.items.append(item)
         self.sorted = False
 
     def for_value(self, value):
         self.sort()
         last = None
         for item in self.items:
-            if self.reversed:
-                if value > item.value:
-                    continue
-                return item
-            else:
+            if self.mode == TableMode.FLOOR:
                 if value >= item.value:
-                    return last or item
-                last = item
+                    last = item
+            if self.mode == TableMode.CEILING:
+                if value <= item.value:
+                    return item
+        return last
 
     def sort(self):
         if self.sorted:
             return
 
-        self.items = sorted(self.items, key=lambda ssr: ssr.value, reverse=True)
+        self.items = sorted(self.items, key=lambda item: item.value)
         self.sorted = True
+
+
+class LineItem:
+    def __init__(self, value, *table):
+        self.value = value
+        self.table = table
+
+    def __repr__(self):
+        return str(self.value)
+
+    @staticmethod
+    def parse(line):
+        parts = list(map(float, line.split(" ")))
+        return LineItem(parts[0], *parts[1:])
+
+    def for_children(self, children):
+        return self.at_index(children - 1)
+
+    def at_index(self, index):
+        return self.table[index]
+
+    def to_markdown(self, headers=[]):
+        headers = ' | '.join(headers)
+        divider = ' | '.join("--" for _v in [self.value] + list(self.table))
+        table = ' | '.join(map(str, [self.value] + list(map(abs, list(self.table)))))
+
+        return "\n".join([headers, divider, table])
+
+    @staticmethod
+    def markdown_headers():
+        headers = ['Income']
+        for children in range(6):
+            child = "child" if children == 0 else "children"
+            headers.append(f'{children + 1} {child}')
+        return headers
 
 
 class SSRTable(Table):
@@ -270,7 +319,7 @@ class SSRTable(Table):
 
     def __init__(self):
         super(SSRTable, self).__init__()
-        self.reversed = True
+        self.mode = TableMode.CEILING
         self.build(SSR_TABLE)
 
 
@@ -284,3 +333,7 @@ class TimeAdjustment(Table):
     def __init__(self):
         super(TimeAdjustment, self).__init__()
         self.build(TIME_ADJUSTMENT)
+
+    @staticmethod
+    def markdown_headers():
+        return ["Min Days", "Adjustment %"]

@@ -4,6 +4,7 @@ from gui_state import State
 from help_text import help_text
 from parent import get_income_period_opts
 from tables import YEAR_DAYS
+from worksheet import TimeAdjustment, LineItem
 
 
 def gui():
@@ -14,10 +15,11 @@ def gui():
     def calc():
         state.calc()
         draw_table.refresh()
+        draw_lookups.refresh()
 
     def even_days():
         for p in state.parents:
-            p.days = 182.5
+            p.days = YEAR_DAYS / 2
 
     def draw_controls():
         with ui.row():
@@ -29,7 +31,7 @@ def gui():
             for parent in state.worksheet.parents:
                 with ui.column():
                     ui.input("Name", on_change=calc).bind_value(parent, "name")
-                    ui.number("Income", on_change=calc).bind_value(parent, "income_val")
+                    ui.number("Income", on_change=calc, step=100).bind_value(parent, "income_val")
                     ui.toggle(get_income_period_opts(), on_change=calc).bind_value(parent, "income_period")
 
                     ui.label("Custodial Days")
@@ -49,7 +51,7 @@ def gui():
                     ui.number("Spousal Maintenance", on_change=calc).bind_value(parent, "maintenance")
                     ui.number("Other Child Support", on_change=calc).bind_value(parent, "other_support")
 
-    def cell(label=None, classes=[], method='label', bind=None, mouseover=None, percent=None):
+    def cell(label=None, classes=[], method='label', bind=None, mouseenter=None, mouseleave=None, percent=None):
         label = str(label or "")
         if percent and label:
             label += "%"
@@ -57,8 +59,10 @@ def gui():
         elm = getattr(ui, method)(label).classes(" ".join(classes))
         if bind:
             elm.bind_text_from(*bind)
-        if mouseover:
-            elm.on('mousemove', mouseover)
+        if mouseenter:
+            elm.on('mouseenter', mouseenter)
+        if mouseleave:
+            elm.on('mouseleave', mouseleave)
         return elm
 
     def head(label, classes=[], **kwargs):
@@ -67,15 +71,15 @@ def gui():
     @ui.refreshable
     def draw_table():
         with ui.grid(columns=4).classes('gap-0'):
-            head("#", mouseover=set_help('header'))
-            head("A", mouseover=set_help('header'))
-            head("B", mouseover=set_help('header'))
-            head("C", mouseover=set_help('header'))
+            head("#", **show_help('header'))
+            head("A", **show_help('header'))
+            head("B", **show_help('header'))
+            head("C", **show_help('header'))
 
-            cell("Name", mouseover=set_help('name'))
-            cell(state.worksheet.A.name, bind=(state.worksheet.A, "name"), mouseover=set_help('name'))
-            cell(state.worksheet.B.name, bind=(state.worksheet.B, "name"), mouseover=set_help('name'))
-            cell(mouseover=set_help('name'))
+            cell("Name", **show_help('name'))
+            cell(state.worksheet.A.name, bind=(state.worksheet.A, "name"), **show_help('name'))
+            cell(state.worksheet.B.name, bind=(state.worksheet.B, "name"), **show_help('name'))
+            cell(**show_help('name'))
 
             for line_num in sorted(state.worksheet.lines.keys()):
                 label = [line_num]
@@ -85,12 +89,16 @@ def gui():
                         label.append(check_name + ": " + str(check))
 
                 topic = f'line{line_num}'
-                cell("<br />".join(map(str, label)), method='html', mouseover=set_help(topic))
+                cell("<br />".join(map(str, label)), method='html', **show_help(topic))
 
-                draw_data(line, mouseover=set_help(topic))
+                draw_data(line, **show_help(topic))
 
         if state.worksheet and state.worksheet.ready:
             ui.label(state.worksheet.final).classes("font-bold")
+            ui.button(
+                "Draw Chart",
+                on_click=lambda e: draw_chart.refresh()
+            )
 
     def draw_data(line, **kwargs):
         cell(line.a, percent=line.is_percent, **kwargs)
@@ -101,19 +109,55 @@ def gui():
     def draw_help():
         ui.markdown(state.help or "")
 
-    def _set_help(help_content):
+    def set_help(help_content):
         if state.set_help(help_content):
             draw_help.refresh()
 
-    def set_help(topic):
-        return lambda e: _set_help(help_text[topic])
+    def show_help(topic):
+        return dict(
+            mouseenter=lambda: set_help(help_text[topic]),
+            mouseleave=lambda: set_help(None),
+        )
+
+    @ui.refreshable
+    def draw_chart():
+        ui.echart({
+            'xAxis': {'type': 'category'},
+            'yAxis': {'axisLabel': {':formatter': 'value => "$" + value'}},
+            'series': [{'type': 'line', 'data': state.worksheet.sim()}],
+        })
+
+    @ui.refreshable
+    def draw_lookups():
+        if not state.worksheet.ready:
+            return
+
+        with ui.column():
+            if state.worksheet.ssr:
+                obligation_label = "Obligation with SSR [KRS 403.212(5)(b)]"
+                line = state.worksheet.ssr
+            else:
+                obligation_label = "Obligation from Guidelines [KRS 403.212(9)]"
+                line = state.worksheet.guideline
+
+            ui.label(obligation_label)
+            ui.markdown(line.to_markdown(LineItem.markdown_headers()), extras=['tables'])
+
+            spa_label = "Shared Parenting Adjustment"
+            if state.worksheet.shared_parenting:
+                ui.label(spa_label)
+                ui.markdown(state.worksheet.time_adjustment.to_markdown(TimeAdjustment.markdown_headers()))
+            else:
+                spa_label += ": None"
+                ui.label(spa_label)
 
     with ui.grid(columns=3).classes('gap-2'):
         with ui.column():
             draw_controls()
         with ui.column():
             draw_table()
+            draw_chart()
         with ui.column():
+            draw_lookups()
             draw_help()
-
     ui.run()

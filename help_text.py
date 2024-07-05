@@ -24,21 +24,26 @@ percentage on line 6B. """,
     line7="""**Line 7:** Determine the total child support obligation by referring to the Guidelines Table [KRS 403.212(9)] using the
 combined monthly adjusted gross income as entered on line 5C and the number of children for whom the parents
 share a joint legal responsibility.
+
 Before proceeding, determine whether self-support reserve (SSR) applies in the case. Check to see if Parent B’s
 monthly adjusted gross income (line 4B) and the number of children for whom support is being determined falls
 within the defined self-support reserve (SSR) [KRS 403.212(5)(b)].
+
 If Parent B’s monthly adjusted gross income (line 4B) and the number of children for whom support is being
 determined falls within the defined SSR, determine Parent B’s total child support obligation using only Parent B’s
 monthly adjusted gross income (AGI) in the Guidelines Table and enter on line 7C [KRS 403.212(5)(b)].
+
 If Parent B’s monthly adjusted gross income (line 4B) and the number of children for whom support is being
 determined does not fall within the defined SSR, on line 7C enter the total child support obligation using the
 combined monthly adjusted gross income on line 5C for the number of children for whom support is being determined
 using the Child Support Guidelines Table [KRS 403.212(9)].
-Check the box on line 7 (I or II) to indicate whether the total child support obligation entered on line 7C was
+
+Indicate whether the total child support obligation entered on line 7C was
 determined from application of the SSR using only Parent B’s monthly adjusted gross income on line 4B or the
 parent’s combined monthly adjusted gross income on line 5C. Insert the amount under line 7 after checking the
 appropriate box.
-Only complete line 7 III if shared parenting adjustment applies. Insert the amount under line 7 after checking the
+
+Indicate if shared parenting adjustment applies. Insert the amount under line 7 after checking the
 appropriate box.""",
     line8="""**Line 8:** Enter the monthly payment for childcare costs [KRS 403.211(6)] paid to the provider by Parent A on line 8A,
 Parent B on line 8B, and the total of lines 8A and 8B, on line 8C. """,
@@ -66,20 +71,7 @@ provider.
 not apply, skip to line 16, instruction 16, and line 16(b).**""",
     line13="""**Line 13:** Determine the number of days Parent B has the child(ren) on an annual basis based upon parenting time that is either
 court-ordered or approved and consistently exercised. Enter the number under line 13B. [KRS 403.2121(2)(a)(b)]. """,
-    line14="""**Line 14:** Using the days listed under line 13B, enter the adjustment percentage on line 14B using the below chart.
-
-| **Parenting Time Days** | **Adjustment Percentage** |
-|-------------------------|---------------------------|
-| 73 - 87                 | 10.5%                     |
-| 88 – 115                | 15%                       |
-| 116 – 129               | 20.5%                     |
-| 130 – 142               | 25%                       |
-| 143 – 152               | 30.5%                     |
-| 153 – 162               | 36%                       |
-| 163 – 172               | 42%                       |
-| 173 – 181               | 48.5%                     |
-| 182 – 182.5             | 50%                       |
-""",
+    line14="""**Line 14:** Using the days listed under line 13B, enter the adjustment percentage on line 14B using the below chart.""",
     line15="""**Line 15:** Enter the parenting time credit adjustment on line 15B by multiplying the obligated parent’s adjustment percentage
 (14B) by the total child support obligation (7C, SSR not applied amount).""",
     line16="""**Line 16:** This line determines the final allocated child support amount paid by Parent B:

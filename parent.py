@@ -47,10 +47,21 @@ class Parent:
         self.isA = False
         self._income_val = 0
         self._income_period = 0
+        self.payment = 0
 
     def __repr__(self):
         letter = "A" if self.isA else "B"
         return f"{self.name} ({letter})"
+
+    def copy(self):
+        return Parent(
+            name=self.name,
+            days=self.days,
+            income=self.income,
+            care_expense=self.care_expense,
+            insurance=self.insurance,
+            maintenance=self.maintenance
+        )
 
     def calc_income(self):
         period = incomePeriods[self._income_period or 0]
@@ -85,9 +96,19 @@ class Parent:
         if combined > 0:
             self.perc = self.adjusted_income / combined
 
-    def check_ssr(self):
+    def check_ssr(self, children):
         table = SSRTable()
-        self.ssr = table.for_value(self.adjusted_income)
+        self.ssr = None
+        ssr_item = table.for_value(self.adjusted_income)
+
+        """In KRS 403.212(5)(b), not every line is completely shaded.
+        The number of children is also a factor, so for unshaded boxes,
+        I set the values to be negative, to indicate that SSR would not apply
+        """
+        if ssr_item:
+            obligation = ssr_item.for_children(children)
+            if obligation > 0:
+                self.ssr = ssr_item
         return self.ssr
 
     def calc_obligation(self, obligation, adjust=False):
