@@ -75,8 +75,10 @@ court-ordered or approved and consistently exercised. Enter the number under lin
     line15="""**Line 15:** Enter the parenting time credit adjustment on line 15B by multiplying the obligated parent’s adjustment percentage
 (14B) by the total child support obligation (7C, SSR not applied amount).""",
     line16="""**Line 16:** This line determines the final allocated child support amount paid by Parent B:
+
 a) **If Shared Parenting Applies:** Subtract line 15B from line 12B Parent B. If this amount is negative, Parent A
 pays the positive sum of the amount in column B to Parent B.
+
 b) **If Shared Parenting Does Not Apply:** The amount listed on line 12B is the amount Parent B is responsible for
 paying as child support to Parent A. Do not proceed to line 17.""",
     line17="""**Line 17:** If Self-Support Reserve (SSR), as determined under line 7(I) is lower than the shared parenting amount listed on line

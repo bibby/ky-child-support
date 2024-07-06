@@ -1,6 +1,5 @@
 import re
 
-from fmt import to_double
 from printer import WorksheetPrinter
 from tables import MIN_SPA_DAYS, SSR_TABLE, GUIDELINES, TIME_ADJUSTMENT, YEAR_DAYS
 
@@ -227,11 +226,17 @@ class WorksheetLine:
     def __init__(self, num, a=None, b=None, c=None, checks=None, percent=False):
         # columns
         self.num = num
-        self.a = to_double(a)
-        self.b = to_double(b)
-        self.c = to_double(c)
+        self.a = WorksheetLine.to_double(a)
+        self.b = WorksheetLine.to_double(b)
+        self.c = WorksheetLine.to_double(c)
         self.checks = checks
         self.is_percent = percent
+
+    @staticmethod
+    def to_double(val):
+        if not val:
+            return 0
+        return int(val * 100) / 100
 
     def __repr__(self):
         return str(self.num)

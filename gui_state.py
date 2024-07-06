@@ -1,10 +1,11 @@
 from parent import Parent
+from tables import YEAR_DAYS
 from worksheet import Worksheet
 
 
 class State:
     def __init__(self):
-        self.children = 3
+        self.children = 1
         self.parents = [
             Parent(name="Him"),
             Parent(name="Her"),
@@ -17,7 +18,7 @@ class State:
 
     def reflect_days(self, parent, value):
         for p in self.parents:
-            val = 365 - value
+            val = YEAR_DAYS - value
             if p != parent and p.days != val:
                 p.days = val
 

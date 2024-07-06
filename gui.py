@@ -1,3 +1,5 @@
+import os
+
 from nicegui import ui
 
 from gui_state import State
@@ -7,6 +9,7 @@ from tables import YEAR_DAYS
 from worksheet import TimeAdjustment, LineItem
 
 
+@ui.page("/")
 def gui():
     state = State()
     state.calc()
@@ -160,4 +163,15 @@ def gui():
         with ui.column():
             draw_lookups()
             draw_help()
-    ui.run()
+
+    ui.on('content_loaded', lambda: print('We are done loading.'))
+
+
+def run():
+    env = os.environ.get
+    ui.run(
+        title="KY 2024 Child Support Calculator",
+        dark=True,
+        reload=not env("PROD", False),
+        port=env("PORT", 8080),
+    )
