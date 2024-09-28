@@ -27,11 +27,11 @@ share a joint legal responsibility.
 
 Before proceeding, determine whether self-support reserve (SSR) applies in the case. Check to see if Parent B’s
 monthly adjusted gross income (line 4B) and the number of children for whom support is being determined falls
-within the defined self-support reserve (SSR) [KRS 403.212(5)(b)].
+within the defined self-support reserve (SSR) [KRS 403.212(9)].
 
 If Parent B’s monthly adjusted gross income (line 4B) and the number of children for whom support is being
 determined falls within the defined SSR, determine Parent B’s total child support obligation using only Parent B’s
-monthly adjusted gross income (AGI) in the Guidelines Table and enter on line 7C [KRS 403.212(5)(b)].
+monthly adjusted gross income (AGI) in the Guidelines Table and enter on line 7C [KRS 403.212(4) revised July 2024].
 
 If Parent B’s monthly adjusted gross income (line 4B) and the number of children for whom support is being
 determined does not fall within the defined SSR, on line 7C enter the total child support obligation using the
